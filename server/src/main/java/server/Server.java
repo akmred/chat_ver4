@@ -4,10 +4,16 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
     private Vector<ClientHandler> clients;
     private AuthService authService;
+    /*2.
+     На серверной стороне сетевого чата реализовать управление потоками через ExecutorService.
+    * */
+    private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     public AuthService getAuthService() {
         return authService;
@@ -31,7 +37,7 @@ public class Server {
             while (true) {
                 socket = server.accept();
                 System.out.println("Клиент подключился");
-                new ClientHandler(this, socket);
+                new ClientHandler(this, socket, executorService);
             }
 
         } catch (IOException e) {
@@ -40,6 +46,7 @@ public class Server {
             SQLHandler.disconnect();
             try {
                 server.close();
+                executorService.shutdown();
             } catch (IOException e) {
                 e.printStackTrace();
             }

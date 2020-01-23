@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.concurrent.ExecutorService;
 
 public class ClientHandler {
     private Server server;
@@ -13,6 +14,7 @@ public class ClientHandler {
     DataOutputStream out;
     private String nick;
     private String login;
+    ExecutorService executorService;
 
     public String getLogin() {
         return login;
@@ -22,11 +24,12 @@ public class ClientHandler {
         return nick;
     }
 
-    public ClientHandler(Server server, Socket socket) {
+    public ClientHandler(Server server, Socket socket, ExecutorService executorService) {
 
         try {
             this.server = server;
             this.socket = socket;
+            this.executorService = executorService;
             //
 
 //            System.out.println("LocalPort: "+socket.getLocalPort());
@@ -37,7 +40,8 @@ public class ClientHandler {
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
-            new Thread(() -> {
+            Thread tStream;
+            tStream = new Thread(() -> {
                 try {
                     //цикл авторизации
                     //установка лимита на молчание по сокету.
@@ -129,7 +133,9 @@ public class ClientHandler {
                     server.unsubscribe(this);
                     System.out.println("Клиент отключился");
                 }
-            }).start();
+            });
+
+            executorService.execute(tStream);
 
         } catch (IOException e) {
             e.printStackTrace();
